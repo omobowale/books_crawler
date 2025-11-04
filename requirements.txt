@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+httpx
+beautifulsoup4
+motor
+pydantic
+python-dotenv
+pytest
+pytest-asyncio
+httpx[http2]
+orjson
+python-multipart
+cssselect

@@ -1,0 +1,61 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# --- Virtual Environments ---
+venv/
+env/
+ENV/
+.venv/
+pip-wheel-metadata/
+
+# --- VSCode / IDEs ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- Logs & Outputs ---
+*.log
+logs/
+*.out
+*.pid
+
+# --- Tests ---
+.coverage
+.tox/
+nosetests.xml
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# --- Docker ---
+*.pid
+*.tar
+*.bak
+*.swp
+.dockerignore
+docker-compose.override.yml
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Environment Files ---
+.env
+.env.local
+.env.*.local
+
+# --- Build / Dist ---
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- MongoDB / Data Volumes ---
+mongo_data/
+data/
