@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-WORKDIR /api
+WORKDIR /src
 
 # Copy requirements and install
 COPY requirements.txt .

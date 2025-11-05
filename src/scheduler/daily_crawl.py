@@ -4,9 +4,9 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-from crawler.crawler import Crawler
+from src.crawler.crawler import Crawler
 from src.db import ensure_indexes
-from utils.logger import logger
+from src.utils.logger import logger
 
 REPORT_DIR = Path("reports")
 REPORT_DIR.mkdir(exist_ok=True)

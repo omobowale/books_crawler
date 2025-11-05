@@ -1,10 +1,12 @@
-# ./scripts/run_daily_crawl.sh
 #!/bin/bash
-# Make sure we are in the correct directory
-cd /api
+# Move to project root (not inside src)
+cd "$(dirname "$0")../../"  
 
-# Activate Python environment if needed (optional for virtualenv)
-# source venv/bin/activate
+# Show where this script is running from
+echo "Running from: $(pwd)"
+
+# Ensure reports directory exists
+mkdir -p reports
 
 # Run daily crawl and log output
-python src/daily_crawl.py >> reports/daily_crawl.log 2>&1
+python -m src.scheduler.daily_crawl >> reports/daily_crawl.log 2>&1

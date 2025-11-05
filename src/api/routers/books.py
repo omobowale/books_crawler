@@ -9,6 +9,7 @@ from src.api.responses import success, warning, error
 
 router = APIRouter()
 
+
 # ----------------------------
 # Pydantic Response Models
 # ----------------------------
@@ -95,7 +96,8 @@ async def list_books(
 
 
 @router.get("/books/{book_id}", response_model=BookResponse)
-async def get_book(book_id: str, api_key: str = Security(get_api_key)):
+@limiter.limit("100/hour")
+async def get_book(request: Request, book_id: str, api_key: str = Security(get_api_key)):
     try:
         oid = ObjectId(book_id)
     except Exception:
@@ -110,7 +112,9 @@ async def get_book(book_id: str, api_key: str = Security(get_api_key)):
 
 
 @router.get("/changes", response_model=ChangesListResponse)
+@limiter.limit("100/hour")
 async def get_recent_changes(
+    request: Request,
     limit: int = 20,
     skip: int = 0,
     api_key: str = Security(get_api_key)
@@ -127,7 +131,8 @@ async def get_recent_changes(
 
 
 @router.delete("/books/clear")
-async def clear_all_books(confirm: bool = Query(False), api_key: str = Security(get_api_key)):
+@limiter.limit("1/hour")
+async def clear_all_books(request: Request, confirm: bool = Query(False), api_key: str = Security(get_api_key)):
     if not confirm:
         return warning("Pass ?confirm=true to delete all books.")
     result = await db.books.delete_many({})

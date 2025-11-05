@@ -3,7 +3,7 @@ from typing import Set, Optional, Dict
 from httpx import AsyncClient, RequestError
 from urllib.parse import urljoin
 
-from ..db import db, ensure_indexes
+from src.db import db, ensure_indexes
 from ..utils.logger import logger
 from src.utils.helpers import gzip_bytes, compute_hash, now_utc, async_sleep
 from ..models import Book
@@ -11,13 +11,13 @@ from ..utils.config import settings
 from ..utils.parser import parse_listing_page, parse_book_page
 
 
-# ✅ Always crawl from /catalogue/
+# Crawl from /catalogue/
 BASE = settings.START_URL.rstrip("/") + "/catalogue/"
 
 class Crawler:
     def __init__(self, start_url: str = BASE, concurrency: Optional[int] = None):
         # Ensure the start URL is correct
-        if "catalogue" not in start_url:
+        if not start_url.endswith(".html"):
             start_url = urljoin(BASE, "page-1.html")
 
         logger.info("start url====================== 1")
