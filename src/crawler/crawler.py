@@ -1,22 +1,28 @@
 import asyncio
-import json
 from typing import Set, Optional, Dict
-from urllib.parse import urljoin, urlparse
-
 from httpx import AsyncClient, RequestError
+from urllib.parse import urljoin
 
-from .db import db, ensure_indexes
-from .logger import logger
-from .utils import gzip_bytes, compute_hash, now_utc, async_sleep
-from .models import Book
-from .config import settings
+from ..db import db, ensure_indexes
+from ..utils.logger import logger
+from src.utils.helpers import gzip_bytes, compute_hash, now_utc, async_sleep
+from ..models import Book
+from ..utils.config import settings
+from ..utils.parser import parse_listing_page, parse_book_page
 
 
-BASE = settings.START_URL or "https://books.toscrape.com/"
-
+# ✅ Always crawl from /catalogue/
+BASE = settings.START_URL.rstrip("/") + "/catalogue/"
 
 class Crawler:
     def __init__(self, start_url: str = BASE, concurrency: Optional[int] = None):
+        # Ensure the start URL is correct
+        if "catalogue" not in start_url:
+            start_url = urljoin(BASE, "page-1.html")
+
+        logger.info("start url====================== 1")
+        logger.info(start_url)
+        logger.info("start url====================== 2")
         self.start_url = start_url
         self.semaphore = asyncio.Semaphore(concurrency or settings.CRAWL_CONCURRENCY)
         self.visited: Set[str] = set()
@@ -25,11 +31,20 @@ class Crawler:
 
     async def load_checkpoint(self):
         cp = await db.checkpoints.find_one({"key": "listing_last"})
-        if cp:
-            return cp.get("value")
-        return None
+        if not cp or not cp.get("value"):
+            return None
+
+        next_url = cp["value"]
+        # ✅ Normalize old checkpoints without /catalogue/
+        if "catalogue" not in next_url:
+            next_url = urljoin(BASE, "page-1.html")
+
+        return next_url
 
     async def save_checkpoint(self, value):
+        # ✅ Normalize before saving
+        if value and "catalogue" not in value:
+            value = urljoin(BASE, value)
         await db.checkpoints.update_one(
             {"key": "listing_last"},
             {"$set": {"value": value}},
@@ -45,10 +60,16 @@ class Crawler:
         })
         return str(res.inserted_id)
 
-    async def upsert_book(self, item: dict, raw_html: bytes):
-        # compute hash
+    async def upsert_book(self, item: dict, raw_html: bytes) -> dict | None:
+        """
+        Upsert a single book.
+        Returns a dict describing the change:
+            {"type": "new" | "updated", "book": item, "changes": {...}}
+        or None if no change.
+        """
         h = compute_hash(raw_html)
         existing = await db.books.find_one({"source_url": item["source_url"]})
+
         doc = {
             **item,
             "crawl_timestamp": now_utc(),
@@ -59,7 +80,6 @@ class Crawler:
         doc["raw_html_snapshot_id"] = raw_id
 
         if existing:
-            # detect change
             if existing.get("raw_html_hash") != h:
                 await db.book_history.insert_one({
                     "book_id": existing["_id"],
@@ -68,11 +88,15 @@ class Crawler:
                 })
                 doc["has_changed"] = True
                 await db.books.update_one({"_id": existing["_id"]}, {"$set": doc})
+                return {"type": "updated", "book": doc, "changes": existing}
+            return None
         else:
             await db.books.insert_one(doc)
+            logger.info(f"✅ Inserted new book: {item['name']}")
+            return {"type": "new", "book": doc}
 
     async def fetch_with_retry(self, url: str, attempts: Optional[int] = None):
-        attempts = attempts or settings.CRAWL_RETRIES
+        attempts = attempts or settings.CRAWL_RETRY_ATTEMPTS
         delay = 1
         for i in range(attempts):
             try:
@@ -89,43 +113,7 @@ class Crawler:
         logger.error(f"Failed after {attempts} attempts: {url}")
         return None
 
-    async def parse_listing_page(self, html: str):
-        """
-        Extract book URLs and next-page link from a listing page.
-        """
-        from bs4 import BeautifulSoup
-
-        soup = BeautifulSoup(html, "html.parser")
-        book_links = [
-            urljoin(BASE, a["href"])
-            for a in soup.select(".product_pod h3 a")
-        ]
-        next_page = soup.select_one("li.next a")
-        next_url = urljoin(BASE, next_page["href"]) if next_page else None
-        return book_links, next_url
-
-    async def parse_book_page(self, html: str, url: str) -> Dict:
-        """
-        Extract book details from a book detail page.
-        """
-        from bs4 import BeautifulSoup
-
-        soup = BeautifulSoup(html, "html.parser")
-        title = soup.select_one("h1").text.strip()
-        price = soup.select_one(".price_color").text.strip()
-        availability = soup.select_one(".instock.availability").text.strip()
-        description_el = soup.select_one("#product_description ~ p")
-        description = description_el.text.strip() if description_el else ""
-
-        return {
-            "title": title,
-            "price": price,
-            "availability": availability,
-            "description": description,
-            "source_url": url,
-        }
-
-    async def crawl_book(self, url: str):
+    async def crawl_book(self, url: str, changes_list: list):
         if url in self.visited:
             return
         self.visited.add(url)
@@ -134,12 +122,17 @@ class Crawler:
         if not res:
             return
 
-        item = await self.parse_book_page(res.text, url)
-        await self.upsert_book(item, res.content)
-        logger.info(f"✅ Saved book: {item['title']}")
+        item = parse_book_page(res.text, url)
+        change = await self.upsert_book(item, res.content)
+        if change:
+            changes_list.append(change)
 
-    async def crawl_listing(self, start_url: str):
+    async def crawl_listing(self, start_url: str, changes_list: list):
         next_url = await self.load_checkpoint() or start_url
+
+        # ✅ Auto-correct if the URL doesn’t contain /catalogue/
+        if "catalogue" not in next_url:
+            next_url = urljoin(BASE, "page-1.html")
 
         while next_url and not self._stop:
             logger.info(f"📖 Crawling page: {next_url}")
@@ -147,8 +140,12 @@ class Crawler:
             if not res:
                 break
 
-            book_links, next_page = await self.parse_listing_page(res.text)
-            tasks = [self.crawl_book(link) for link in book_links]
+            book_links, next_page = parse_listing_page(res.text)
+            # Normalize next_page
+            if next_page and "catalogue" not in next_page:
+                next_page = urljoin(BASE, next_page)
+
+            tasks = [self.crawl_book(link, changes_list) for link in book_links]
             await asyncio.gather(*tasks)
 
             await self.save_checkpoint(next_page)
@@ -157,8 +154,10 @@ class Crawler:
     async def run(self):
         logger.info("🚀 Starting crawler...")
         await ensure_indexes()
+        changes = []
         try:
-            await self.crawl_listing(self.start_url)
+            await self.crawl_listing(self.start_url, changes)
+            return changes
         finally:
             await self.client.aclose()
             logger.info("🛑 Crawler stopped.")

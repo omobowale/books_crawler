@@ -1,0 +1,2 @@
+# Run daily at 2 AM
+0 2 * * * /app/scripts/run_daily_crawl.sh
