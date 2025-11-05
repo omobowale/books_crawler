@@ -1,7 +1,7 @@
 # ./scripts/run_daily_crawl.sh
 #!/bin/bash
 # Make sure we are in the correct directory
-cd /app
+cd /api
 
 # Activate Python environment if needed (optional for virtualenv)
 # source venv/bin/activate
