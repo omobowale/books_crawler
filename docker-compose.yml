@@ -19,6 +19,8 @@ services:
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: books_to_scrape
       API_KEY: mysecretkey
+    volumes:
+      - ./reports:/app/reports
 
 volumes:
   mongo_data:

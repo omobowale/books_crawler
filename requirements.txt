@@ -13,3 +13,4 @@ python-multipart
 cssselect
 pydantic-settings==2.2.1
 slowapi
+schedule

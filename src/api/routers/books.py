@@ -125,9 +125,22 @@ async def get_recent_changes(
         c["_id"] = str(c["_id"])
         if "book_id" in c:
             c["book_id"] = str(c["book_id"])
+        if isinstance(c.get("ts"), (bytes, bytearray)):
+            c["ts"] = c["ts"].decode("utf-8")
+        elif hasattr(c.get("ts"), "isoformat"):
+            c["ts"] = c["ts"].isoformat()
+
+        # Convert nested ObjectIds inside 'previous'
+        prev = c.get("previous")
+        if isinstance(prev, dict):
+            prev["_id"] = str(prev["_id"]) if "_id" in prev else None
+            if "book_id" in prev and isinstance(prev["book_id"], ObjectId):
+                prev["book_id"] = str(prev["book_id"])
+
         changes.append(c)
 
     return success("Recent changes fetched successfully", data=changes)
+
 
 
 @router.delete("/books/clear")
