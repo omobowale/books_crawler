@@ -15,8 +15,8 @@ A scalable async web crawler and API for https://books.toscrape.com using FastAP
 
 Clone the repository:
 ```bash
-git clone https://github.com/omobowale/books_scrapper.git
-cd books_scrapper
+git clone https://github.com/omobowale/books_crawler.git
+cd books_crawler
 ```
 
 ### Docker Setup (Recommended)
@@ -62,7 +62,7 @@ docker exec -it books_api cat /app/reports/daily_crawl.log
 
 **Navigate to the project directory:**
 ```bash
-cd books_scrapper
+cd books_crawler
 ```
 
 **Create a `.env` file:**
@@ -151,3 +151,11 @@ python -m pytest
 ## Dependencies
 
 All project dependencies are listed in `requirements.txt`.
+
+
+## Screenshots
+- Screenshots of logs of successful + scheduler runs 
+
+![alt text](<Screenshot 2025-11-06 024555.png>)
+
+![alt text](<Screenshot 2025-11-06 024520.png>)
