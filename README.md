@@ -152,6 +152,63 @@ python -m pytest
 
 All project dependencies are listed in `requirements.txt`.
 
+### With versions:
+Package                  Version
+------------------------ ---------
+annotated-doc            0.0.3
+annotated-types          0.7.0
+anyio                    4.11.0
+backports.asyncio.runner 1.2.0
+beautifulsoup4           4.14.2
+certifi                  2025.10.5
+click                    8.3.0
+cssselect                1.3.0
+Deprecated               1.3.1
+dnspython                2.8.0
+exceptiongroup           1.3.0
+fastapi                  0.121.0
+h11                      0.16.0
+h2                       4.3.0
+hpack                    4.1.0
+httpcore                 1.0.9
+httptools                0.7.1
+httpx                    0.28.1
+hyperframe               6.1.0
+idna                     3.11
+iniconfig                2.3.0
+limits                   5.6.0
+motor                    3.7.1
+orjson                   3.11.4
+packaging                25.0
+pip                      23.0.1
+pluggy                   1.6.0
+pydantic                 2.12.4
+pydantic_core            2.41.5
+pydantic-settings        2.2.1
+Pygments                 2.19.2
+pymongo                  4.15.3
+pytest                   8.4.2
+pytest-asyncio           1.2.0
+python-dotenv            1.2.1
+python-multipart         0.0.20
+PyYAML                   6.0.3
+schedule                 1.2.2
+setuptools               79.0.1
+slowapi                  0.1.9
+sniffio                  1.3.1
+soupsieve                2.8
+starlette                0.49.3
+tomli                    2.3.0
+typing_extensions        4.15.0
+typing-inspection        0.4.2
+uvicorn                  0.38.0
+uvloop                   0.22.1
+watchfiles               1.1.1
+websockets               15.0.1
+wheel                    0.45.1
+wrapt                    2.0.0
+
+Python Version: 3.10.19+
 
 ## Screenshots
 - Screenshots of logs of successful + scheduler runs 
