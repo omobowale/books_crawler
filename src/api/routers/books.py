@@ -143,8 +143,9 @@ async def get_recent_changes(
 
 
 
+# This is just for testing purposes
 @router.delete("/books/clear")
-@limiter.limit("1/hour")
+@limiter.limit("1/minute")
 async def clear_all_books(request: Request, confirm: bool = Query(False), api_key: str = Security(get_api_key)):
     if not confirm:
         return warning("Pass ?confirm=true to delete all books.")

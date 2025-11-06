@@ -4,6 +4,7 @@ from .routers import crawler, books
 from .dependencies import limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from ..utils.config import settings
 import sys
 import logging
@@ -12,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="BooksToScrape API", version="1.0")
 app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 # Startup validation
 @app.on_event("startup")
