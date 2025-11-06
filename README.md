@@ -30,13 +30,13 @@ docker build -t books_api .
 
 **Run the container:**
 ```bash
-docker run -d --name books_api_cron_container -p 8000:8000 books_api_cron
+docker run -d --name books_api -p 8000:8000 books_api
 ```
 
 This will:
 - Start the FastAPI server on port 8000
 - Automatically schedule a daily crawl at 2 AM
-- Store crawler logs at `/reports/daily_crawler.log` inside the container
+- Store crawler logs at `/app/reports/daily_crawler.log` inside the container
 
 **Verify the cron job is active:**
 ```bash
