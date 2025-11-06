@@ -156,6 +156,7 @@ All project dependencies are listed in `requirements.txt`.
 ## Screenshots
 - Screenshots of logs of successful + scheduler runs 
 
+![alt text](<Screenshot 2025-11-06 024520.png>)
+
 ![alt text](<Screenshot 2025-11-06 024555.png>)
 
-![alt text](<Screenshot 2025-11-06 024520.png>)
